@@ -1,3 +1,7 @@
 node_modules/
 dist/
 NetscriptDefinitions.d.ts
+stock_master.js
+helpers.js
+Temp/
+*.no
