@@ -73,7 +73,6 @@ export function CopyOfTestLowGrade(ns: NS, server: Server, player: Player, threa
         }
     }
 
-
     let income = 0;
     let hackTimes = 0;
     let time = initialTime;

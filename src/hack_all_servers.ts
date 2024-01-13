@@ -16,28 +16,42 @@ export function serverStats(ns: NS, hostname: string): Array<number> {
 export async function hack(ns: NS): Promise<void> {
     const servers: Array<string> = getNukedServers(ns);
     const serversToHack = GetServersForHack(ns, hackAnalyzePath);
-    let unusedRAM = 0;
     const scriptRAM = ns.getScriptRam("hacks/low_grade_hack_spell.js");
+    const shareScriptRAM = ns.getScriptRam("hacks/share.js");
     for (const server of servers) {
         ns.killall(server, true);
         ns.scp("hacks/low_grade_hack_spell.js", server, "home");
+        ns.scp("hacks/share.js", server, "home");
         
         let serverThreads: number;
-        if (serversToHack.length === 0) {
-            unusedRAM += ns.getServerMaxRam(server);
-            continue;
-        }
         if (server == "home" ) {
             serverThreads = Math.floor((ns.getServerMaxRam(server) - ns.getServerUsedRam(server) - 32) / scriptRAM);
         } else {
             serverThreads = Math.floor((ns.getServerMaxRam(server) - ns.getServerUsedRam(server) ) / scriptRAM);
         }
 
-        while (serversToHack.length >= 1 && serverThreads > 0) {
+        while (serverThreads > 0) {
+            if (serversToHack.length === 0) {
+                const shareThreads = Math.floor((serverThreads * scriptRAM) / shareScriptRAM);
+                if (shareThreads === 0) {
+                    serverThreads = 0;
+                    continue;
+                }
+                ns.exec("hacks/share.js", server, shareThreads);
+                serverThreads = 0;
+                continue;
+            }
             if (serversToHack[0][1] === 0) {
                 serversToHack.shift();
                 if (serversToHack.length === 0) {
-                    unusedRAM += serverThreads * scriptRAM;
+                    const shareThreads = Math.floor((serverThreads * scriptRAM) / shareScriptRAM);
+                    if (shareThreads === 0) {
+                        serverThreads = 0;
+                        continue;
+                    }
+                    ns.exec("hacks/share.js", server, shareThreads);
+                    serverThreads = 0;
+                    continue;
                 }
                 continue;
             }
@@ -46,10 +60,11 @@ export async function hack(ns: NS): Promise<void> {
             serversToHack[0][1] -= threadsLaunch;
             serverThreads -= threadsLaunch;
             ns.exec("hacks/low_grade_hack_spell.js", server, threadsLaunch, serversToHack[0][0], stats[0], stats[1]);
+            /*
+            if (unusedRAM > 0) {
+            ns.tprint(`WARNING unusedRAM = ${unusedRAM}`);
+            */
         }
-    }
-    if (unusedRAM > 0) {
-        ns.tprint(`WARNING unusedRAM = ${unusedRAM}`);
     }
 }
 
@@ -57,7 +72,7 @@ export async function hack(ns: NS): Promise<void> {
 export async function main(ns: NS): Promise<void> {
     for(;;) {
         ns.print("update servers");
-        await updateOptimalServers(ns);
+        // await updateOptimalServers(ns);
         ns.print("kill all");
         ns.exec("kill_all.js", "home");
         ns.print("launch hack")
@@ -67,7 +82,7 @@ export async function main(ns: NS): Promise<void> {
         ns.print("launch stock_master");
         ns.exec("stock_master.js", "home");
         ns.print("sleeping for 1250000ms");
-        await ns.sleep(1250000);
+        await ns.sleep(1500000);
     }
 }
 

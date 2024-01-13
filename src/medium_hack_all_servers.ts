@@ -36,7 +36,6 @@ export async function name(ns: NS) {
 
 
     async function GetFreeMemory(ns: NS) {
-        // const freeRam = ;
         const portMemory = ns.getPortHandle(1);
     
         for (;;) {
@@ -55,7 +54,7 @@ export async function name(ns: NS) {
 
 
 class SortedArray {
-    sortedServersByRAMAvaliable: Array<[string, number]>;
+    sortedServersByRAMAvaliable: Array<[hostname: string, RAMdiff: number]>;
 
     constructor() {
         this.sortedServersByRAMAvaliable = [];
@@ -80,11 +79,9 @@ class SortedArray {
     }
 }
 
-
-
 /*
  1) server, operation, n threads
- 2) [ram1], [ram2], [ram3] 
+ 2) [ram1], [ram2], [ram3],
  3) weaken
  4) grow
  5) hack
